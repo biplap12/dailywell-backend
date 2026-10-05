@@ -1,0 +1,57 @@
+services:
+  api:
+    build: .
+    container_name: dailywell-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://mongo:27017/dailywell
+      # Required: set real secrets in your shell or an .env file next to this compose file.
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-30m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:5000/api/v1}
+      # Redis is optional; the API runs fine with this empty. Use the "redis" profile to start one.
+      REDIS_URL: ${REDIS_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7
+    container_name: dailywell-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # Not published to the host by default. Uncomment for local tooling such as Compass:
+    # ports:
+    #   - "127.0.0.1:27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  redis:
+    image: redis:7-alpine
+    container_name: dailywell-redis
+    restart: unless-stopped
+    profiles: ["redis"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  mongo_data:
+  redis_data:
