@@ -16,7 +16,7 @@ const schema = z.object({
     .min(16, "JWT_REFRESH_SECRET must be at least 16 characters"),
   JWT_ACCESS_EXPIRES_IN: z.string().default("30m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("30d"),
-  CORS_ORIGINS: z.string().default("http://192.168.1.66:5000"),
+  CORS_ORIGINS: z.string().default("http://localhost:3000"),
   REDIS_URL: z.string().optional().default(""),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
